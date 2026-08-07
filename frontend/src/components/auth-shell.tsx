@@ -18,18 +18,8 @@ export function AuthShell({
   footer: React.ReactNode
 }) {
   return (
-    <div className="bg-surface relative flex min-h-svh flex-col items-center justify-center px-4 py-12">
-      {/* Soft brand glow so the page doesn't read as a bare white sheet. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-72 opacity-60"
-        style={{
-          background:
-            "radial-gradient(60% 100% at 50% 0%, color-mix(in oklch, var(--primary) 18%, transparent), transparent)",
-        }}
-      />
-
-      <div className="relative w-full max-w-sm space-y-6">
+    <div className="bg-background flex min-h-svh flex-col items-center justify-center px-4 py-12">
+      <div className="w-full max-w-sm space-y-6">
         <div className="flex flex-col items-center gap-3 text-center">
           <BrandMark className="size-11 rounded-xl text-xl" />
           <div className="space-y-1">

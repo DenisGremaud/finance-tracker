@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/dialog"
 import { PageHeader } from "@/components/page-header"
 import { EmptyState } from "@/components/empty-state"
-import { CategoryChip } from "@/components/category-chip"
+import { Amount } from "@/components/amount"
+import { CategoryIcon } from "@/components/category-icon"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import * as budgetsApi from "@/api/budgets"
 import * as categoriesApi from "@/api/categories"
@@ -190,24 +191,45 @@ export function BudgetsPage() {
               return (
                 <Card key={status.id} className="gap-0 py-4">
                   <CardContent className="space-y-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <CategoryChip
-                          name={status.category.name}
-                          color={status.category.color}
-                          className="min-w-0 text-sm"
-                        />
-                        {status.is_over && (
-                          <Badge variant="destructive" className="shrink-0">
-                            Dépassé
-                          </Badge>
-                        )}
+                    <div className="flex items-center gap-3">
+                      <CategoryIcon
+                        name={status.category.name}
+                        color={status.category.color}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate text-sm font-medium">
+                            {status.category.name}
+                          </span>
+                          {status.is_over && (
+                            <Badge variant="destructive" className="shrink-0">
+                              Dépassé
+                            </Badge>
+                          )}
+                        </div>
+                        <p
+                          className={
+                            status.is_over
+                              ? "text-destructive num text-xs"
+                              : "text-muted-foreground num text-xs"
+                          }
+                        >
+                          {status.is_over
+                            ? `${formatCurrency(Math.abs(remaining))} de dépassement`
+                            : `${formatCurrency(remaining)} restants`}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <Amount value={spent} className="block text-sm font-semibold" />
+                        <p className="text-muted-foreground num text-xs">
+                          sur {formatCurrency(limit)}
+                        </p>
                       </div>
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => setPendingDelete(status)}
-                        className="text-muted-foreground hover:text-destructive -mt-1 -mr-2 size-8 shrink-0"
+                        className="text-muted-foreground hover:text-destructive -mr-1 size-8 shrink-0"
                       >
                         <Trash2 className="size-4" />
                         <span className="sr-only">Supprimer</span>
@@ -218,24 +240,6 @@ export function BudgetsPage() {
                       value={percent}
                       indicatorClassName={progressTone(percent, status.is_over)}
                     />
-
-                    <div className="flex items-baseline justify-between text-sm">
-                      <span className="num">
-                        <span className="font-semibold">{formatCurrency(spent)}</span>
-                        <span className="text-muted-foreground"> / {formatCurrency(limit)}</span>
-                      </span>
-                      <span
-                        className={
-                          status.is_over
-                            ? "text-destructive num text-xs font-medium"
-                            : "text-muted-foreground num text-xs"
-                        }
-                      >
-                        {status.is_over
-                          ? `${formatCurrency(Math.abs(remaining))} de dépassement`
-                          : `${formatCurrency(remaining)} restants`}
-                      </span>
-                    </div>
                   </CardContent>
                 </Card>
               )

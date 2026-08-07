@@ -23,9 +23,10 @@ export function DonutChart({ data, centerLabel = "Total" }: DonutChartProps) {
   let offset = 0
 
   return (
-    // Stacked rather than side-by-side: this card is narrow, and a horizontal
-    // layout squeezes the category names down to zero width.
-    <div className="flex flex-col items-center gap-6">
+    // Stacked rather than side-by-side: a horizontal layout squeezes the
+    // category names down to zero width in a narrow card. Capped and centred
+    // so the legend doesn't stretch across a full-width card on desktop.
+    <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-6">
       <div className="relative size-40 shrink-0">
         <svg viewBox="0 0 100 100" className="size-full -rotate-90">
           {data.map((d) => {

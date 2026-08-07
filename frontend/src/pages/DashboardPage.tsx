@@ -8,13 +8,14 @@ import {
   Plus,
   Receipt,
   TriangleAlert,
+  Wallet,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { PageHeader } from "@/components/page-header"
 import { EmptyState } from "@/components/empty-state"
+import { Amount } from "@/components/amount"
 import { BarChart } from "@/components/charts/bar-chart"
 import { DonutChart } from "@/components/charts/donut-chart"
 import * as statsApi from "@/api/stats"
@@ -31,36 +32,40 @@ const CHART_PALETTE = [
   "var(--chart-5)",
 ]
 
-function StatCard({
+function Tile({
+  icon: Icon,
+  tint,
   label,
   value,
-  icon: Icon,
-  hint,
-  tone = "default",
   isLoading,
+  tone,
 }: {
+  icon: typeof Receipt
+  tint: string
   label: string
   value: string
-  icon: typeof Receipt
-  hint?: React.ReactNode
-  tone?: "default" | "danger"
   isLoading: boolean
+  tone?: "danger"
 }) {
   return (
-    <Card className="gap-0 py-5">
-      <CardContent className="space-y-2">
-        <div className="text-muted-foreground flex items-center gap-2 text-sm">
-          <Icon className="size-4" />
-          {label}
+    <Card className="gap-0 py-4">
+      <CardContent className="space-y-3 px-4">
+        <span
+          className="flex size-9 items-center justify-center rounded-[0.75rem] text-white"
+          style={{ backgroundColor: tint }}
+        >
+          <Icon className="size-4.5" />
+        </span>
+        <div className="space-y-0.5">
+          <p className="text-muted-foreground text-xs">{label}</p>
+          {isLoading ? (
+            <Skeleton className="h-6 w-20" />
+          ) : (
+            <p className={cn("num text-lg font-semibold", tone === "danger" && "text-destructive")}>
+              {value}
+            </p>
+          )}
         </div>
-        {isLoading ? (
-          <Skeleton className="h-8 w-20" />
-        ) : (
-          <p className={cn("num text-2xl font-semibold", tone === "danger" && "text-destructive")}>
-            {value}
-          </p>
-        )}
-        {!isLoading && hint && <div className="text-xs">{hint}</div>}
       </CardContent>
     </Card>
   )
@@ -106,7 +111,7 @@ export function DashboardPage() {
 
   const totalBudget = budgets.reduce((sum, b) => sum + Number(b.amount), 0)
   const budgetSpent = budgets.reduce((sum, b) => sum + Number(b.spent), 0)
-  const budgetPercent = totalBudget > 0 ? Math.min((budgetSpent / totalBudget) * 100, 100) : 0
+  const remaining = totalBudget - budgetSpent
 
   const topCategories = (summary?.top_categories ?? []).map((c, index) => ({
     label: c.category_name,
@@ -117,146 +122,134 @@ export function DashboardPage() {
   const hasAnyData = monthTotals.length > 0 || topCategories.length > 0
 
   return (
-    <div className="space-y-4">
-      <PageHeader
-        title="Tableau de bord"
-        actions={
+    <div className="space-y-6">
+      {/* Hero: the single number worth seeing first, on the bare page. */}
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground text-sm">
+            Dépensé en {monthLabel(currentMonth, false).toLowerCase()}
+          </span>
+          {!isLoading && delta !== null && (
+            <span
+              className={cn(
+                "inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-medium",
+                delta > 0
+                  ? "bg-destructive/12 text-destructive"
+                  : "bg-success/15 text-success"
+              )}
+            >
+              {delta > 0 ? (
+                <ArrowUpRight className="size-3" />
+              ) : (
+                <ArrowDownRight className="size-3" />
+              )}
+              {Math.abs(Math.round(delta))}%
+            </span>
+          )}
+        </div>
+
+        {isLoading ? (
+          <Skeleton className="h-11 w-52" />
+        ) : (
+          <Amount value={thisMonth} className="block text-4xl font-semibold" />
+        )}
+
+        <div className="flex flex-wrap gap-2 pt-1">
           <Button asChild>
             <Link to="/expenses">
               <Plus className="size-4" />
-              Ajouter une dépense
+              Ajouter
             </Link>
           </Button>
-        }
-      />
-
-      {/* Hero: the one number worth seeing first. */}
-      <div
-        // Fixed gradient rather than var(--primary): the dark palette lightens
-        // primary, which would flip this card to dark-on-light and lose the
-        // white-text contrast it is designed around.
-        className="relative overflow-hidden rounded-xl p-6 text-white"
-        style={{
-          background: "linear-gradient(135deg, oklch(0.53 0.2 277), oklch(0.46 0.22 315))",
-        }}
-      >
-        <div
-          aria-hidden
-          className="absolute -top-16 -right-10 size-48 rounded-full opacity-15"
-          style={{ background: "radial-gradient(circle, white, transparent 70%)" }}
-        />
-        <div className="relative space-y-1">
-          <p className="text-sm opacity-80">
-            Dépenses en {monthLabel(currentMonth, false).toLowerCase()} {currentYear}
-          </p>
-          {isLoading ? (
-            <Skeleton className="h-11 w-48 bg-white/20" />
-          ) : (
-            <p className="num text-4xl font-semibold">{formatCurrency(thisMonth)}</p>
-          )}
-
-          {!isLoading && delta !== null && (
-            <p className="flex items-center gap-1 text-sm opacity-90">
-              {delta > 0 ? (
-                <ArrowUpRight className="size-4" />
-              ) : (
-                <ArrowDownRight className="size-4" />
-              )}
-              <span className="font-medium">{Math.abs(Math.round(delta))}%</span>
-              <span className="opacity-80">par rapport au mois dernier</span>
-            </p>
-          )}
-
-          {!isLoading && totalBudget > 0 && (
-            <div className="space-y-1.5 pt-4">
-              <div className="h-1.5 overflow-hidden rounded-full bg-white/25">
-                <div
-                  className="h-full rounded-full bg-white transition-all"
-                  style={{ width: `${budgetPercent}%` }}
-                />
-              </div>
-              <p className="num text-xs opacity-80">
-                {formatCurrency(budgetSpent)} sur {formatCurrency(totalBudget)} budgétés
-              </p>
-            </div>
-          )}
+          <Button variant="outline" asChild>
+            <Link to="/budgets">
+              <Wallet className="size-4" />
+              Budgets
+            </Link>
+          </Button>
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <StatCard
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Dépenses par mois</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <Skeleton className="h-52 w-full" />
+          ) : hasAnyData ? (
+            <BarChart data={chartData} />
+          ) : (
+            <EmptyState
+              icon={BarChart3}
+              title="Aucune dépense cette année"
+              description="Ajoutez votre première dépense pour voir apparaître vos statistiques."
+              action={
+                <Button asChild size="sm">
+                  <Link to="/expenses">Ajouter une dépense</Link>
+                </Button>
+              }
+            />
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Tile
           isLoading={isLoading}
-          label="Nombre de dépenses"
           icon={Receipt}
+          tint="var(--chart-1)"
+          label="Dépenses"
           value={String(summary?.current_month_count ?? 0)}
         />
-        <StatCard
+        <Tile
           isLoading={isLoading}
-          label="Budgets dépassés"
+          icon={Wallet}
+          tint="var(--chart-5)"
+          label="Budget total"
+          value={formatCurrency(totalBudget)}
+        />
+        <Tile
+          isLoading={isLoading}
+          icon={BarChart3}
+          tint="var(--chart-2)"
+          label="Restant"
+          value={formatCurrency(remaining)}
+          tone={remaining < 0 ? "danger" : undefined}
+        />
+        <Tile
+          isLoading={isLoading}
           icon={TriangleAlert}
-          tone={summary && summary.budgets_over_count > 0 ? "danger" : "default"}
+          tint="var(--chart-3)"
+          label="Dépassés"
           value={String(summary?.budgets_over_count ?? 0)}
-          hint={
-            summary && summary.budgets_over_count > 0 ? (
-              <Link to="/budgets" className="text-primary font-medium hover:underline">
-                Voir les budgets
-              </Link>
-            ) : (
-              <span className="text-muted-foreground">Tout est sous contrôle</span>
-            )
-          }
+          tone={summary && summary.budgets_over_count > 0 ? "danger" : undefined}
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-5">
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle className="text-base">Dépenses par mois</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-52 w-full" />
-            ) : hasAnyData ? (
-              <BarChart data={chartData} />
-            ) : (
-              <EmptyState
-                icon={BarChart3}
-                title="Aucune dépense cette année"
-                description="Ajoutez votre première dépense pour voir apparaître vos statistiques."
-                action={
-                  <Button asChild size="sm" variant="outline">
-                    <Link to="/expenses">Ajouter une dépense</Link>
-                  </Button>
-                }
-              />
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-base">Répartition ce mois-ci</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-40 w-full" />
-            ) : topCategories.length > 0 ? (
-              <DonutChart data={topCategories} />
-            ) : (
-              <EmptyState
-                icon={PieChart}
-                title="Pas encore de catégories utilisées"
-                description="Classez vos dépenses par catégorie pour voir leur répartition."
-                action={
-                  <Button asChild size="sm" variant="outline">
-                    <Link to="/categories">Créer une catégorie</Link>
-                  </Button>
-                }
-              />
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Répartition ce mois-ci</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <Skeleton className="h-40 w-full" />
+          ) : topCategories.length > 0 ? (
+            <DonutChart data={topCategories} />
+          ) : (
+            <EmptyState
+              icon={PieChart}
+              title="Pas encore de catégories utilisées"
+              description="Classez vos dépenses par catégorie pour voir leur répartition."
+              action={
+                <Button asChild size="sm">
+                  <Link to="/categories">Créer une catégorie</Link>
+                </Button>
+              }
+            />
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

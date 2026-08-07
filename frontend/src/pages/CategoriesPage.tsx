@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { PageHeader } from "@/components/page-header"
 import { EmptyState } from "@/components/empty-state"
-import { CategoryDot } from "@/components/category-dot"
+import { CategoryIcon } from "@/components/category-icon"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import * as categoriesApi from "@/api/categories"
 import { ApiError } from "@/api/client"
@@ -200,11 +200,8 @@ export function CategoriesPage() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((category) => (
-            <Card
-              key={category.id}
-              className="flex-row items-center gap-3 px-4 py-3.5 transition-shadow hover:shadow-sm"
-            >
-              <CategoryDot color={category.color} className="size-3" />
+            <Card key={category.id} className="flex-row items-center gap-3 px-3 py-3">
+              <CategoryIcon name={category.name} color={category.color} />
               <span className="min-w-0 flex-1 truncate text-sm font-medium">{category.name}</span>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

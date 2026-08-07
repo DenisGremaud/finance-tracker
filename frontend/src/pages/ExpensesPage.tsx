@@ -5,14 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Select } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
   DropdownMenu,
@@ -22,7 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { PageHeader } from "@/components/page-header"
 import { EmptyState } from "@/components/empty-state"
-import { CategoryChip } from "@/components/category-chip"
+import { Amount } from "@/components/amount"
+import { CategoryIcon } from "@/components/category-icon"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { ExpenseForm } from "@/components/expense-form"
 import * as expensesApi from "@/api/expenses"
@@ -63,35 +56,6 @@ function periodRange(period: Period): { date_from?: string; date_to?: string } {
     default:
       return {}
   }
-}
-
-function RowActions({
-  onEdit,
-  onDelete,
-}: {
-  onEdit: () => void
-  onDelete: () => void
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="text-muted-foreground size-8">
-          <MoreHorizontal className="size-4" />
-          <span className="sr-only">Actions</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuItem onClick={onEdit}>
-          <Pencil className="size-4" />
-          Modifier
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={onDelete} variant="destructive">
-          <Trash2 className="size-4" />
-          Supprimer
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
 }
 
 export function ExpensesPage() {
@@ -137,11 +101,6 @@ export function ExpensesPage() {
     setIsFormOpen(true)
   }
 
-  function openEdit(expense: Expense) {
-    setEditing(expense)
-    setIsFormOpen(true)
-  }
-
   async function handleSubmit(data: expensesApi.ExpenseInput) {
     if (editing) {
       await expensesApi.updateExpense(editing.id, data)
@@ -161,7 +120,7 @@ export function ExpensesPage() {
   const isEmpty = !isLoading && expenses.length === 0
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <PageHeader
         title="Dépenses"
         description={
@@ -205,14 +164,14 @@ export function ExpensesPage() {
         </Select>
       </div>
 
-      <Card className="gap-0 overflow-hidden py-0">
-        {isLoading ? (
-          <div className="space-y-3 p-4">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <Skeleton key={index} className="h-10 w-full" />
-            ))}
-          </div>
-        ) : isEmpty ? (
+      {isLoading ? (
+        <div className="space-y-2">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <Skeleton key={index} className="h-16 w-full rounded-xl" />
+          ))}
+        </div>
+      ) : isEmpty ? (
+        <Card className="py-0">
           <EmptyState
             icon={Receipt}
             title="Aucune dépense"
@@ -228,83 +187,61 @@ export function ExpensesPage() {
               </Button>
             }
           />
-        ) : (
-          <>
-            {/* Phone layout: a table would need horizontal scrolling here. */}
-            <ul className="divide-y sm:hidden">
-              {expenses.map((expense) => (
-                <li key={expense.id} className="flex items-center gap-3 px-4 py-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{expense.description}</p>
-                    <div className="mt-1 flex min-w-0 items-center gap-2">
-                      {expense.category && (
-                        <CategoryChip
-                          name={expense.category.name}
-                          color={expense.category.color}
-                          className="min-w-0"
-                        />
-                      )}
-                      <span className="text-muted-foreground num shrink-0 text-xs">
-                        {formatDate(expense.date)}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="num shrink-0 text-sm font-semibold">
-                    {formatCurrency(expense.amount)}
-                  </span>
-                  <RowActions
-                    onEdit={() => openEdit(expense)}
-                    onDelete={() => setPendingDelete(expense)}
-                  />
-                </li>
-              ))}
-            </ul>
-
-            <div className="hidden sm:block">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="pl-6">Date</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Catégorie</TableHead>
-                    <TableHead className="text-right">Montant</TableHead>
-                    <TableHead className="w-12" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {expenses.map((expense) => (
-                    <TableRow key={expense.id}>
-                      <TableCell className="text-muted-foreground num pl-6">
-                        {formatDate(expense.date)}
-                      </TableCell>
-                      <TableCell className="font-medium">{expense.description}</TableCell>
-                      <TableCell>
-                        {expense.category ? (
-                          <CategoryChip
-                            name={expense.category.name}
-                            color={expense.category.color}
-                          />
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="num text-right font-semibold">
-                        {formatCurrency(expense.amount)}
-                      </TableCell>
-                      <TableCell className="pr-4">
-                        <RowActions
-                          onEdit={() => openEdit(expense)}
-                          onDelete={() => setPendingDelete(expense)}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </>
-        )}
-      </Card>
+        </Card>
+      ) : (
+        <Card className="gap-0 overflow-hidden py-2">
+          <ul>
+            {expenses.map((expense) => (
+              <li key={expense.id} className="flex items-center gap-3 px-3 py-2.5">
+                <CategoryIcon
+                  name={expense.category?.name ?? "?"}
+                  color={expense.category?.color}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{expense.description}</p>
+                  <p className="text-muted-foreground truncate text-xs">
+                    {expense.category?.name ?? "Sans catégorie"}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <Amount value={expense.amount} className="block text-sm font-semibold" />
+                  <p className="text-muted-foreground num text-xs">{formatDate(expense.date)}</p>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground -mr-1 size-8 shrink-0"
+                    >
+                      <MoreHorizontal className="size-4" />
+                      <span className="sr-only">Actions</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40">
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setEditing(expense)
+                        setIsFormOpen(true)
+                      }}
+                    >
+                      <Pencil className="size-4" />
+                      Modifier
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setPendingDelete(expense)}
+                      variant="destructive"
+                    >
+                      <Trash2 className="size-4" />
+                      Supprimer
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent>
