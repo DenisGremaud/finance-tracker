@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react"
-import { ChevronLeft, ChevronRight, Plus, Trash2, Wallet } from "lucide-react"
+import { Link } from "react-router-dom"
+import { ChevronLeft, ChevronRight, Pencil, Plus, Tag, Trash2, Wallet } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -43,6 +44,7 @@ export function BudgetsPage() {
   const [isLoading, setIsLoading] = useState(true)
 
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [editing, setEditing] = useState<BudgetStatus | null>(null)
   const [categoryId, setCategoryId] = useState("")
   const [amount, setAmount] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -58,8 +60,12 @@ export function BudgetsPage() {
     }
   }
 
+  async function loadCategories() {
+    setCategories(await categoriesApi.listCategories())
+  }
+
   useEffect(() => {
-    categoriesApi.listCategories().then(setCategories).catch(() => undefined)
+    loadCategories().catch(() => undefined)
   }, [])
 
   useEffect(() => {
@@ -80,19 +86,40 @@ export function BudgetsPage() {
   const totalSpent = statuses.reduce((sum, s) => sum + Number(s.spent), 0)
   const overallPercent = totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0
 
+  function openCreate() {
+    setEditing(null)
+    setCategoryId("")
+    setAmount("")
+    setError(null)
+    // Categories may have been added on another page since this one mounted.
+    loadCategories().catch(() => undefined)
+    setIsFormOpen(true)
+  }
+
+  function openEdit(status: BudgetStatus) {
+    setEditing(status)
+    setCategoryId(String(status.category_id))
+    // The API returns "300.00"; show "300" so the field reads naturally.
+    setAmount(String(Number(status.amount)))
+    setError(null)
+    setIsFormOpen(true)
+  }
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     setError(null)
     setIsSubmitting(true)
     try {
-      await budgetsApi.createBudget({
-        category_id: Number(categoryId),
-        month,
-        year,
-        amount,
-      })
-      setCategoryId("")
-      setAmount("")
+      if (editing) {
+        await budgetsApi.updateBudget(editing.id, amount)
+      } else {
+        await budgetsApi.createBudget({
+          category_id: Number(categoryId),
+          month,
+          year,
+          amount,
+        })
+      }
       setIsFormOpen(false)
       await load()
     } catch (err) {
@@ -108,13 +135,15 @@ export function BudgetsPage() {
     await load()
   }
 
+  const canPickCategory = editing !== null || availableCategories.length > 0
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <PageHeader
         title="Budgets"
         description="Fixez une limite mensuelle par catégorie et suivez votre progression."
         actions={
-          <Button onClick={() => setIsFormOpen(true)} disabled={availableCategories.length === 0}>
+          <Button onClick={openCreate}>
             <Plus className="size-4" />
             Ajouter
           </Button>
@@ -138,7 +167,7 @@ export function BudgetsPage() {
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, index) => (
-            <Skeleton key={index} className="h-24 w-full" />
+            <Skeleton key={index} className="h-24 w-full rounded-xl" />
           ))}
         </div>
       ) : statuses.length === 0 ? (
@@ -148,16 +177,23 @@ export function BudgetsPage() {
             title="Aucun budget pour ce mois"
             description={
               categories.length === 0
-                ? "Créez d'abord une catégorie, puis fixez-lui un budget mensuel."
+                ? "Un budget s'applique à une catégorie. Créez-en une d'abord."
                 : "Fixez une limite par catégorie pour être alerté en cas de dépassement."
             }
             action={
-              availableCategories.length > 0 ? (
-                <Button size="sm" onClick={() => setIsFormOpen(true)}>
+              categories.length === 0 ? (
+                <Button asChild size="sm">
+                  <Link to="/categories">
+                    <Tag className="size-4" />
+                    Créer une catégorie
+                  </Link>
+                </Button>
+              ) : (
+                <Button size="sm" onClick={openCreate}>
                   <Plus className="size-4" />
                   Ajouter un budget
                 </Button>
-              ) : undefined
+              )
             }
           />
         </Card>
@@ -192,10 +228,7 @@ export function BudgetsPage() {
                 <Card key={status.id} className="gap-0 py-4">
                   <CardContent className="space-y-3">
                     <div className="flex items-center gap-3">
-                      <CategoryIcon
-                        name={status.category.name}
-                        color={status.category.color}
-                      />
+                      <CategoryIcon name={status.category.name} color={status.category.color} />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="truncate text-sm font-medium">
@@ -225,15 +258,26 @@ export function BudgetsPage() {
                           sur {formatCurrency(limit)}
                         </p>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setPendingDelete(status)}
-                        className="text-muted-foreground hover:text-destructive -mr-1 size-8 shrink-0"
-                      >
-                        <Trash2 className="size-4" />
-                        <span className="sr-only">Supprimer</span>
-                      </Button>
+                      <div className="flex shrink-0 items-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEdit(status)}
+                          className="text-muted-foreground hover:text-foreground size-8"
+                        >
+                          <Pencil className="size-4" />
+                          <span className="sr-only">Modifier</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setPendingDelete(status)}
+                          className="text-muted-foreground hover:text-destructive -mr-1 size-8"
+                        >
+                          <Trash2 className="size-4" />
+                          <span className="sr-only">Supprimer</span>
+                        </Button>
+                      </div>
                     </div>
 
                     <Progress
@@ -252,60 +296,98 @@ export function BudgetsPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              Budget · {monthLabel(month, false)} {year}
+              {editing ? "Modifier le budget" : "Nouveau budget"} · {monthLabel(month, false)}{" "}
+              {year}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="budget-category">Catégorie</Label>
-              <Select
-                id="budget-category"
-                value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-                required
-              >
-                <option value="" disabled>
-                  Choisir une catégorie
-                </option>
-                {availableCategories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </Select>
+
+          {/* The button always opens: a disabled button with no explanation is
+              a dead end, so the reason lives here instead. */}
+          {!canPickCategory ? (
+            <div className="space-y-4">
+              <p className="text-muted-foreground text-sm">
+                {categories.length === 0
+                  ? "Un budget s'applique à une catégorie, et vous n'en avez pas encore créé."
+                  : `Toutes vos catégories ont déjà un budget pour ${monthLabel(month, false).toLowerCase()} ${year}. Modifiez un budget existant, changez de mois, ou créez une nouvelle catégorie.`}
+              </p>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsFormOpen(false)}>
+                  Fermer
+                </Button>
+                <Button asChild>
+                  <Link to="/categories">
+                    <Tag className="size-4" />
+                    {categories.length === 0 ? "Créer une catégorie" : "Gérer les catégories"}
+                  </Link>
+                </Button>
+              </DialogFooter>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="budget-amount">Limite mensuelle</Label>
-              <div className="relative">
-                <Input
-                  id="budget-amount"
-                  type="number"
-                  inputMode="decimal"
-                  step="0.01"
-                  min="0"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0,00"
-                  className="num pr-7"
-                  required
-                />
-                <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm">
-                  €
-                </span>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="budget-category">Catégorie</Label>
+                {editing ? (
+                  <div className="flex items-center gap-2.5">
+                    <CategoryIcon
+                      name={editing.category.name}
+                      color={editing.category.color}
+                      className="size-8"
+                    />
+                    <span className="text-sm font-medium">{editing.category.name}</span>
+                  </div>
+                ) : (
+                  <Select
+                    id="budget-category"
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(e.target.value)}
+                    required
+                  >
+                    <option value="" disabled>
+                      Choisir une catégorie
+                    </option>
+                    {availableCategories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </Select>
+                )}
               </div>
-            </div>
 
-            {error && <p className="text-destructive text-sm">{error}</p>}
+              <div className="space-y-2">
+                <Label htmlFor="budget-amount">Limite mensuelle</Label>
+                <div className="relative">
+                  <Input
+                    id="budget-amount"
+                    type="number"
+                    inputMode="decimal"
+                    step="0.01"
+                    min="0"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0,00"
+                    className="num pr-7"
+                    required
+                    autoFocus
+                  />
+                  <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm">
+                    €
+                  </span>
+                </div>
+              </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
-                Annuler
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Enregistrement..." : "Enregistrer"}
-              </Button>
-            </DialogFooter>
-          </form>
+              {error && <p className="text-destructive text-sm">{error}</p>}
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
+                  Annuler
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Enregistrement..." : "Enregistrer"}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -315,7 +397,7 @@ export function BudgetsPage() {
         title="Supprimer ce budget ?"
         description={
           pendingDelete
-            ? `Le budget de « ${pendingDelete.category.name} » pour ${monthLabel(month, false)} ${year} sera supprimé.`
+            ? `Le budget de « ${pendingDelete.category.name} » pour ${monthLabel(month, false).toLowerCase()} ${year} sera supprimé.`
             : undefined
         }
         onConfirm={handleDelete}
