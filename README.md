@@ -5,7 +5,7 @@ Application de suivi de dépenses personnelles : dépenses, catégories, budgets
 ## Stack
 
 - **Backend** : FastAPI, SQLAlchemy 2.0, Alembic, PostgreSQL, JWT (python-jose), bcrypt (passlib)
-- **Frontend** : React + TypeScript (Vite), Tailwind CSS, shadcn/ui, react-router-dom
+- **Frontend** : React + TypeScript (Vite), Tailwind CSS, shadcn/ui, react-router-dom, PWA (installable sur mobile)
 
 ## Prérequis
 
@@ -80,3 +80,8 @@ pytest
 - Gestion des catégories
 - Budgets mensuels par catégorie avec suivi du dépassement
 - Tableau de bord avec statistiques et graphiques (dépenses par mois, par catégorie)
+- Progressive Web App : installable sur téléphone (Android/iOS) via "Ajouter à l'écran d'accueil"
+
+## Déploiement
+
+Voir [DEPLOY.md](./DEPLOY.md) pour déployer sur Railway (backend + frontend + PostgreSQL), avec déploiement automatique à chaque push sur `main`.
