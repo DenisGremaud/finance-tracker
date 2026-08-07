@@ -10,6 +10,7 @@ import { DashboardPage } from "@/pages/DashboardPage"
 import { ExpensesPage } from "@/pages/ExpensesPage"
 import { CategoriesPage } from "@/pages/CategoriesPage"
 import { BudgetsPage } from "@/pages/BudgetsPage"
+import { AccountPage } from "@/pages/AccountPage"
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
                 <Route path="/expenses" element={<ExpensesPage />} />
                 <Route path="/categories" element={<CategoriesPage />} />
                 <Route path="/budgets" element={<BudgetsPage />} />
+                <Route path="/account" element={<AccountPage />} />
               </Route>
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

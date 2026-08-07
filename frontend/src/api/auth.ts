@@ -22,3 +22,14 @@ export function login(email: string, password: string) {
 export function me() {
   return apiRequest<User>("/auth/me")
 }
+
+export function updateProfile(data: { email?: string; full_name?: string | null }) {
+  return apiRequest<User>("/auth/me", { method: "PATCH", body: data })
+}
+
+export function changePassword(currentPassword: string, newPassword: string) {
+  return apiRequest<void>("/auth/change-password", {
+    method: "POST",
+    body: { current_password: currentPassword, new_password: newPassword },
+  })
+}

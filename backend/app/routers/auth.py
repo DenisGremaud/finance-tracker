@@ -7,7 +7,13 @@ from app.deps import get_current_user
 from app.models.user import User
 from app.rate_limit import limiter
 from app.schemas.token import Token
-from app.schemas.user import RegisterResponse, UserCreate, UserRead
+from app.schemas.user import (
+    PasswordChange,
+    RegisterResponse,
+    UserCreate,
+    UserRead,
+    UserUpdate,
+)
 from app.security import create_access_token, hash_password, verify_password
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -55,3 +61,46 @@ def login(
 @router.get("/me", response_model=UserRead)
 def read_current_user(current_user: User = Depends(get_current_user)) -> UserRead:
     return UserRead.model_validate(current_user)
+
+
+@router.patch("/me", response_model=UserRead)
+def update_current_user(
+    payload: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> UserRead:
+    if payload.email is not None and payload.email != current_user.email:
+        taken = (
+            db.query(User)
+            .filter(User.email == payload.email, User.id != current_user.id)
+            .first()
+        )
+        if taken:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cet email est déjà utilisé",
+            )
+        current_user.email = payload.email
+
+    if payload.full_name is not None:
+        current_user.full_name = payload.full_name or None
+
+    db.commit()
+    db.refresh(current_user)
+    return UserRead.model_validate(current_user)
+
+
+@router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT)
+def change_password(
+    payload: PasswordChange,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> None:
+    if not verify_password(payload.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Mot de passe actuel incorrect",
+        )
+
+    current_user.hashed_password = hash_password(payload.new_password)
+    db.commit()

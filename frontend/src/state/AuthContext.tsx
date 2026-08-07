@@ -10,6 +10,8 @@ interface AuthContextValue {
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
   register: (email: string, password: string, fullName?: string) => Promise<void>
+  /** Replaces the cached user after a profile edit, so the shell updates. */
+  updateUser: (user: User) => void
   logout: () => void
 }
 
@@ -52,7 +54,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated: !!user, isLoading, login, register, logout }}
+      value={{
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        login,
+        register,
+        updateUser: setUser,
+        logout,
+      }}
     >
       {children}
     </AuthContext.Provider>

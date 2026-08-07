@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { LayoutDashboard, List, LogOut, Tag, Wallet } from "lucide-react"
+import { LayoutDashboard, List, LogOut, Tag, UserRound, Wallet } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -40,7 +40,10 @@ function AccountMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="bg-card text-foreground flex size-9 items-center justify-center rounded-full text-xs font-semibold">
+        <button
+          data-slot="account-menu"
+          className="bg-card text-foreground flex size-9 items-center justify-center rounded-full text-xs font-semibold"
+        >
           {initial}
           <span className="sr-only">Mon compte</span>
         </button>
@@ -51,6 +54,12 @@ function AccountMenu() {
           <p className="text-muted-foreground truncate text-xs">{user?.email}</p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/account">
+            <UserRound className="size-4" />
+            Mon compte
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={logout} variant="destructive">
           <LogOut className="size-4" />
           Déconnexion
@@ -93,14 +102,19 @@ export function DesktopSidebar() {
         })}
       </nav>
 
-      <div className="flex items-center gap-2.5 px-2 py-2">
-        <span className="bg-card text-foreground flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
-          {initial}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium">{user?.full_name || "Mon compte"}</p>
-          <p className="text-muted-foreground truncate text-xs">{user?.email}</p>
-        </div>
+      <div className="flex items-center gap-1 py-2">
+        <Link
+          to="/account"
+          className="hover:bg-card flex min-w-0 flex-1 items-center gap-2.5 rounded-full p-2 transition-colors"
+        >
+          <span className="bg-card text-foreground flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
+            {initial}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{user?.full_name || "Mon compte"}</p>
+            <p className="text-muted-foreground truncate text-xs">{user?.email}</p>
+          </div>
+        </Link>
         <ThemeToggle />
         <Button
           variant="ghost"
