@@ -64,6 +64,9 @@ export function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              <p className="text-xs text-muted-foreground">
+                Au moins 8 caractères, avec une lettre et un chiffre
+              </p>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" disabled={isSubmitting} className="w-full">

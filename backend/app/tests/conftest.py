@@ -6,12 +6,14 @@ from sqlalchemy.pool import StaticPool
 
 from app.database import Base, get_db
 from app.main import app
+from app.rate_limit import limiter
 
 TEST_DATABASE_URL = "sqlite:///:memory:"
 
 
 @pytest.fixture()
 def client():
+    limiter.reset()
     engine = create_engine(
         TEST_DATABASE_URL,
         connect_args={"check_same_thread": False},

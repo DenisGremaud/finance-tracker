@@ -50,7 +50,7 @@ L'application est disponible sur `http://localhost:5173`.
 
 **backend/.env**
 - `DATABASE_URL` : URL de connexion PostgreSQL
-- `SECRET_KEY` : clé secrète pour signer les JWT
+- `SECRET_KEY` : clé secrète pour signer les JWT — **à changer impérativement en production** (ex. `openssl rand -hex 32`), sinon les tokens peuvent être falsifiés
 - `ACCESS_TOKEN_EXPIRE_MINUTES` : durée de validité des tokens
 - `CORS_ORIGINS` : origines autorisées (front Vite par défaut)
 
@@ -81,6 +81,18 @@ pytest
 - Budgets mensuels par catégorie avec suivi du dépassement
 - Tableau de bord avec statistiques et graphiques (dépenses par mois, par catégorie)
 - Progressive Web App : installable sur téléphone (Android/iOS) via "Ajouter à l'écran d'accueil"
+
+## Sécurité
+
+- Mots de passe hashés avec bcrypt (jamais stockés en clair)
+- Authentification par JWT signé (HS256), vérifié sur chaque route protégée
+- Validation du mot de passe côté serveur (min. 8 caractères, au moins une lettre et un chiffre)
+- Rate limiting sur `/auth/login` (10/min) et `/auth/register` (5/min) par IP pour limiter le brute-force
+- Toutes les requêtes CRUD sont scopées par utilisateur (impossible d'accéder aux données d'un autre compte)
+- Headers de sécurité (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`) sur toutes les réponses
+- Protection XSS/injection SQL native (React échappe le contenu, SQLAlchemy paramètre toutes les requêtes)
+
+⚠️ Non couvert pour l'instant : vérification d'email à l'inscription, révocation de token (un JWT reste valide jusqu'à expiration), 2FA.
 
 ## Déploiement
 

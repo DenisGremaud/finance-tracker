@@ -76,7 +76,16 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     let detail = response.statusText
     try {
       const data = await response.json()
-      detail = data.detail || detail
+      if (typeof data.detail === "string") {
+        detail = data.detail
+      } else if (Array.isArray(data.detail)) {
+        // FastAPI validation error format: [{ msg: "Value error, ...", ... }, ...]
+        detail =
+          data.detail
+            .map((e: { msg?: string }) => e.msg?.replace(/^Value error,\s*/, ""))
+            .filter(Boolean)
+            .join(", ") || detail
+      }
     } catch {
       // ignore body parse failure
     }

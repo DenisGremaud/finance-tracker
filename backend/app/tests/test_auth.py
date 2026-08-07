@@ -1,3 +1,6 @@
+import pytest
+
+
 def test_register_and_me(client):
     response = client.post(
         "/auth/register",
@@ -35,3 +38,30 @@ def test_login_success_and_failure(client):
 def test_protected_route_requires_token(client):
     response = client.get("/auth/me")
     assert response.status_code == 401
+
+
+@pytest.mark.parametrize(
+    "password",
+    ["short1", "alllettersnodigit", "12345678", "1234567"],
+)
+def test_register_weak_password_rejected(client, password):
+    response = client.post(
+        "/auth/register",
+        json={"email": "weakpass@example.com", "password": password},
+    )
+    assert response.status_code == 422
+
+
+def test_login_is_rate_limited(client):
+    client.post("/auth/register", json={"email": "ratelimit@example.com", "password": "secret123"})
+
+    for _ in range(10):
+        response = client.post(
+            "/auth/login", data={"username": "ratelimit@example.com", "password": "wrong"}
+        )
+        assert response.status_code == 401
+
+    limited = client.post(
+        "/auth/login", data={"username": "ratelimit@example.com", "password": "wrong"}
+    )
+    assert limited.status_code == 429
