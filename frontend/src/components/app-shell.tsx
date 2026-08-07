@@ -11,6 +11,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { BrandMark } from "@/components/brand-mark"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuth } from "@/state/AuthContext"
 import { cn } from "@/lib/utils"
 
@@ -74,6 +75,7 @@ function UserFooter() {
         <p className="truncate text-sm font-medium">{user?.full_name || "Mon compte"}</p>
         <p className="text-muted-foreground truncate text-xs">{user?.email}</p>
       </div>
+      <ThemeToggle />
       <Button
         variant="ghost"
         size="icon"

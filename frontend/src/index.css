@@ -5,7 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --radius: 0.625rem;
+  /* Generous rounding: the app is used mostly on a phone, where softer cards
+     read as a native app rather than a dashboard. */
+  --radius: 1rem;
 
   --background: oklch(1 0 0);
   --foreground: oklch(0.21 0.012 265);

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog"
 import { PageHeader } from "@/components/page-header"
 import { EmptyState } from "@/components/empty-state"
-import { CategoryDot } from "@/components/category-dot"
+import { CategoryChip } from "@/components/category-chip"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import * as budgetsApi from "@/api/budgets"
 import * as categoriesApi from "@/api/categories"
@@ -192,10 +192,11 @@ export function BudgetsPage() {
                   <CardContent className="space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex min-w-0 items-center gap-2">
-                        <CategoryDot color={status.category.color} className="size-3" />
-                        <span className="truncate text-sm font-medium">
-                          {status.category.name}
-                        </span>
+                        <CategoryChip
+                          name={status.category.name}
+                          color={status.category.color}
+                          className="min-w-0 text-sm"
+                        />
                         {status.is_over && (
                           <Badge variant="destructive" className="shrink-0">
                             Dépassé

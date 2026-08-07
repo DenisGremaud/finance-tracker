@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { PageHeader } from "@/components/page-header"
 import { EmptyState } from "@/components/empty-state"
-import { CategoryDot } from "@/components/category-dot"
+import { CategoryChip } from "@/components/category-chip"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { ExpenseForm } from "@/components/expense-form"
 import * as expensesApi from "@/api/expenses"
@@ -236,12 +236,18 @@ export function ExpensesPage() {
                 <li key={expense.id} className="flex items-center gap-3 px-4 py-3">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{expense.description}</p>
-                    <p className="text-muted-foreground mt-0.5 flex items-center gap-1.5 text-xs">
-                      {expense.category && <CategoryDot color={expense.category.color} className="size-2" />}
-                      <span className="truncate">{expense.category?.name ?? "Sans catégorie"}</span>
-                      <span aria-hidden>·</span>
-                      <span className="num shrink-0">{formatDate(expense.date)}</span>
-                    </p>
+                    <div className="mt-1 flex min-w-0 items-center gap-2">
+                      {expense.category && (
+                        <CategoryChip
+                          name={expense.category.name}
+                          color={expense.category.color}
+                          className="min-w-0"
+                        />
+                      )}
+                      <span className="text-muted-foreground num shrink-0 text-xs">
+                        {formatDate(expense.date)}
+                      </span>
+                    </div>
                   </div>
                   <span className="num shrink-0 text-sm font-semibold">
                     {formatCurrency(expense.amount)}
@@ -274,10 +280,10 @@ export function ExpensesPage() {
                       <TableCell className="font-medium">{expense.description}</TableCell>
                       <TableCell>
                         {expense.category ? (
-                          <span className="flex items-center gap-2">
-                            <CategoryDot color={expense.category.color} />
-                            {expense.category.name}
-                          </span>
+                          <CategoryChip
+                            name={expense.category.name}
+                            color={expense.category.color}
+                          />
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}

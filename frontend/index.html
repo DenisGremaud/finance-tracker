@@ -12,6 +12,19 @@
     <meta name="apple-mobile-web-app-title" content="Finance" />
     <meta name="description" content="Suivi de dépenses, budgets et statistiques personnelles" />
     <title>Finance Tracker</title>
+    <script>
+      // Set the theme before first paint, otherwise dark-mode users get a
+      // white flash while React boots.
+      (function () {
+        try {
+          var stored = localStorage.getItem("ft_theme") || "system"
+          var dark =
+            stored === "dark" ||
+            (stored === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)
+          if (dark) document.documentElement.classList.add("dark")
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>
