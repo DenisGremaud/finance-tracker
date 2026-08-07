@@ -11,6 +11,8 @@ import { ExpensesPage } from "@/pages/ExpensesPage"
 import { CategoriesPage } from "@/pages/CategoriesPage"
 import { BudgetsPage } from "@/pages/BudgetsPage"
 import { AccountPage } from "@/pages/AccountPage"
+import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage"
+import { ResetPasswordPage } from "@/pages/ResetPasswordPage"
 
 export default function App() {
   return (
@@ -20,6 +22,8 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
             <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>
                 <Route path="/" element={<DashboardPage />} />

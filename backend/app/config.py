@@ -9,7 +9,20 @@ class Settings(BaseSettings):
     secret_key: str = "change-me-to-a-random-secret"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
+    reset_token_expire_minutes: int = 30
     cors_origins: str = "http://localhost:5173"
+
+    # Public URL of the frontend, used to build the password reset link.
+    frontend_url: str = "http://localhost:5173"
+
+    # Leave smtp_host empty to disable sending: the reset link is written to
+    # the logs instead, which keeps the flow usable in local development.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_tls: bool = True
+    smtp_from: str = "Finance Tracker <noreply@finance-tracker.app>"
 
     @field_validator("database_url")
     @classmethod

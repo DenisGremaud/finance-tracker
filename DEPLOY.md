@@ -33,6 +33,28 @@ Ce repo est un monorepo avec deux services à déployer séparément (`backend/`
    ⚠️ Vite intègre les variables `VITE_*` **au moment du build**, pas à l'exécution. Le `Dockerfile` du frontend est écrit pour recevoir cette variable comme argument de build (`ARG VITE_API_BASE_URL`) — Railway le fait automatiquement pour les variables de service déclarées.
 4. **Settings → Networking** → **Generate Domain** pour obtenir l'URL publique du frontend (ex. `https://finance-app-production.up.railway.app`). C'est cette URL que vous ouvrez sur votre téléphone.
 
+## 3 bis. Activer les emails de réinitialisation de mot de passe (optionnel)
+
+Le parcours « mot de passe oublié » a besoin d'un serveur SMTP pour envoyer le lien. **Tant que `SMTP_HOST` n'est pas renseigné, aucun email ne part** : le lien est seulement écrit dans les logs du backend. Le reste de l'application fonctionne normalement.
+
+Pour l'activer, ajoutez sur le service **backend** :
+
+```
+FRONTEND_URL=<URL publique du frontend>
+SMTP_HOST=<hôte smtp>
+SMTP_PORT=587
+SMTP_USER=<identifiant>
+SMTP_PASSWORD=<mot de passe / clé API>
+SMTP_FROM=Finance Tracker <noreply@votredomaine.com>
+```
+
+Quelques options courantes :
+- **Resend** — `smtp.resend.com`, port `587`, utilisateur `resend`, mot de passe = votre clé API. Offre gratuite généreuse, et une adresse d'expédition de test utilisable sans vérifier de domaine.
+- **Brevo / Mailjet / Postmark** — même principe, ils fournissent hôte, identifiant et clé.
+- **Votre boîte mail** (Gmail, Infomaniak…) — possible avec un mot de passe d'application, mais les fournisseurs limitent le volume et classent plus facilement en spam.
+
+`FRONTEND_URL` est important : c'est lui qui construit le lien contenu dans l'email. S'il pointe sur `localhost`, le lien reçu sur votre téléphone ne fonctionnera pas.
+
 ## 4. Boucler la config CORS
 
 Une fois l'URL du frontend connue, retourner sur le service **backend** → **Variables** → mettre à jour :

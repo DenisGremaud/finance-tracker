@@ -27,6 +27,17 @@ export function updateProfile(data: { email?: string; full_name?: string | null 
   return apiRequest<User>("/auth/me", { method: "PATCH", body: data })
 }
 
+export function forgotPassword(email: string) {
+  return apiRequest<void>("/auth/forgot-password", { method: "POST", body: { email } })
+}
+
+export function resetPassword(token: string, newPassword: string) {
+  return apiRequest<void>("/auth/reset-password", {
+    method: "POST",
+    body: { token, new_password: newPassword },
+  })
+}
+
 export function changePassword(currentPassword: string, newPassword: string) {
   return apiRequest<void>("/auth/change-password", {
     method: "POST",

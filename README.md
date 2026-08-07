@@ -52,7 +52,10 @@ L'application est disponible sur `http://localhost:5173`.
 - `DATABASE_URL` : URL de connexion PostgreSQL
 - `SECRET_KEY` : clé secrète pour signer les JWT — **à changer impérativement en production** (ex. `openssl rand -hex 32`), sinon les tokens peuvent être falsifiés
 - `ACCESS_TOKEN_EXPIRE_MINUTES` : durée de validité des tokens
+- `RESET_TOKEN_EXPIRE_MINUTES` : durée de validité d'un lien de réinitialisation
 - `CORS_ORIGINS` : origines autorisées (front Vite par défaut)
+- `FRONTEND_URL` : URL publique du frontend, utilisée pour construire le lien de réinitialisation
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_TLS`, `SMTP_FROM` : envoi des emails de réinitialisation. **Si `SMTP_HOST` est vide, aucun email n'est envoyé** : le lien est écrit dans les logs du backend, ce qui permet de tester le parcours en local.
 
 **frontend/.env**
 - `VITE_API_BASE_URL` : URL de l'API backend
