@@ -1,7 +1,15 @@
 import { Link, useLocation } from "react-router-dom"
-import { LayoutDashboard, List, Tag, Wallet, LogOut } from "lucide-react"
+import { LayoutDashboard, List, Menu, Tag, Wallet, LogOut } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/state/AuthContext"
 import { cn } from "@/lib/utils"
 
@@ -21,7 +29,7 @@ export function Navbar() {
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <div className="flex items-center gap-6">
           <span className="font-semibold">Finance Tracker</span>
-          <nav className="flex items-center gap-1">
+          <nav className="hidden items-center gap-1 md:flex">
             {links.map(({ to, label, icon: Icon }) => (
               <Link
                 key={to}
@@ -37,12 +45,46 @@ export function Navbar() {
             ))}
           </nav>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">{user?.email}</span>
+
+        <div className="hidden items-center gap-3 md:flex">
+          <span className="max-w-40 truncate text-sm text-muted-foreground">{user?.email}</span>
           <Button variant="ghost" size="icon" onClick={logout} title="Déconnexion">
             <LogOut className="size-4" />
           </Button>
         </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="md:hidden">
+              <Menu className="size-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel className="truncate font-normal text-muted-foreground">
+              {user?.email}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {links.map(({ to, label, icon: Icon }) => (
+              <DropdownMenuItem key={to} asChild>
+                <Link
+                  to={to}
+                  className={cn(
+                    "flex items-center gap-2",
+                    location.pathname === to && "bg-accent text-accent-foreground"
+                  )}
+                >
+                  <Icon className="size-4" />
+                  {label}
+                </Link>
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={logout} variant="destructive">
+              <LogOut className="size-4" />
+              Déconnexion
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   )
