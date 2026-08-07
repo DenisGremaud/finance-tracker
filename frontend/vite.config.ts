@@ -11,6 +11,13 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      workbox: {
+        // Without these, a freshly deployed build sits in "waiting" and phones
+        // keep serving the previously cached version until every tab is closed.
+        clientsClaim: true,
+        skipWaiting: true,
+        cleanupOutdatedCaches: true,
+      },
       manifest: {
         name: 'Finance Tracker',
         short_name: 'Finance',

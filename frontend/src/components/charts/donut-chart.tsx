@@ -1,4 +1,6 @@
-interface DonutChartDatum {
+import { formatCurrency } from "@/lib/format"
+
+export interface DonutChartDatum {
   label: string
   value: number
   color: string
@@ -6,54 +8,65 @@ interface DonutChartDatum {
 
 interface DonutChartProps {
   data: DonutChartDatum[]
-  size?: number
+  centerLabel?: string
 }
 
-export function DonutChart({ data, size = 200 }: DonutChartProps) {
+const RADIUS = 42
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS
+/** Small visual gap between segments, in path units. */
+const GAP = 1.5
+
+export function DonutChart({ data, centerLabel = "Total" }: DonutChartProps) {
   const total = data.reduce((sum, d) => sum + d.value, 0)
-
-  if (total === 0) {
-    return <p className="text-sm text-muted-foreground">Pas encore de données</p>
-  }
-
-  const radius = size / 2
-  const strokeWidth = radius * 0.35
-  const innerRadius = radius - strokeWidth / 2
-  const circumference = 2 * Math.PI * innerRadius
+  if (total === 0) return null
 
   let offset = 0
 
   return (
-    <div className="flex items-center gap-6">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <g transform={`rotate(-90 ${radius} ${radius})`}>
+    // Stacked rather than side-by-side: this card is narrow, and a horizontal
+    // layout squeezes the category names down to zero width.
+    <div className="flex flex-col items-center gap-6">
+      <div className="relative size-40 shrink-0">
+        <svg viewBox="0 0 100 100" className="size-full -rotate-90">
           {data.map((d) => {
-            const fraction = d.value / total
-            const dash = fraction * circumference
-            const circle = (
+            const length = (d.value / total) * CIRCUMFERENCE
+            const dash = Math.max(length - GAP, 0.5)
+            const segment = (
               <circle
                 key={d.label}
-                cx={radius}
-                cy={radius}
-                r={innerRadius}
+                cx="50"
+                cy="50"
+                r={RADIUS}
                 fill="none"
                 stroke={d.color}
-                strokeWidth={strokeWidth}
-                strokeDasharray={`${dash} ${circumference - dash}`}
+                strokeWidth="12"
+                strokeLinecap="round"
+                strokeDasharray={`${dash} ${CIRCUMFERENCE - dash}`}
                 strokeDashoffset={-offset}
               />
             )
-            offset += dash
-            return circle
+            offset += length
+            return segment
           })}
-        </g>
-      </svg>
-      <ul className="flex flex-col gap-1.5 text-sm">
+        </svg>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-muted-foreground text-xs">{centerLabel}</span>
+          <span className="num text-base font-semibold">{formatCurrency(total)}</span>
+        </div>
+      </div>
+
+      <ul className="w-full min-w-0 space-y-2.5">
         {data.map((d) => (
-          <li key={d.label} className="flex items-center gap-2">
-            <span className="inline-block size-2.5 rounded-full" style={{ backgroundColor: d.color }} />
-            <span className="text-muted-foreground">{d.label}</span>
-            <span className="font-medium">{d.value.toFixed(2)} €</span>
+          <li key={d.label} className="flex items-center gap-2.5 text-sm">
+            <span
+              className="size-2.5 shrink-0 rounded-full"
+              style={{ backgroundColor: d.color }}
+            />
+            <span className="min-w-0 flex-1 truncate">{d.label}</span>
+            <span className="num shrink-0 font-medium">{formatCurrency(d.value)}</span>
+            <span className="text-muted-foreground num w-10 shrink-0 text-right text-xs">
+              {Math.round((d.value / total) * 100)}%
+            </span>
           </li>
         ))}
       </ul>
